@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Auto-generated scrape output (written by saveJson -> OUTPUT_DIR).
+# Regenerable, bulky, and contains scraped third-party store data
+# (review text, developer names). Do NOT publish — see the ToS note in README.
+output/
+
+# Test coverage reports
+coverage/
+
+# Local Claude Code / editor settings
+.claude/settings.local.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Environment files (none currently used, but guard against future secrets)
+.env
+.env.*
