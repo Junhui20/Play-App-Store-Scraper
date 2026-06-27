@@ -12,6 +12,7 @@ jest.mock('google-play-scraper', () => ({
 jest.mock('app-store-scraper', () => ({
   app: jest.fn(),
   reviews: jest.fn(),
+  ratings: jest.fn(),
   sort: { RECENT: 'RECENT' },
 }));
 
@@ -20,6 +21,7 @@ jest.mock('../src/utils', () => ({
   safeSegment: jest.requireActual('../src/utils').safeSegment,
   delay: jest.fn().mockResolvedValue(undefined),
   percentage: jest.requireActual('../src/utils').percentage,
+  ratingsSummary: jest.requireActual('../src/utils').ratingsSummary,
   timestamp: jest.fn().mockReturnValue('2026-03-15-00-00-00'),
   extractKeywords: jest.requireActual('../src/utils').extractKeywords,
   extractThemes: jest.requireActual('../src/utils').extractThemes,
@@ -180,6 +182,44 @@ describe('analyzeAppStore', () => {
 
     const report = await analyzeAppStore('123456');
 
+    expect(report.analysis.totalReviewsFetched).toBe(5);
+  });
+});
+
+describe('ratings histogram', () => {
+  test('summarizes the Google Play histogram into low-star shares', async () => {
+    gplay.app.mockResolvedValue(mockGplayAppDetail);
+    gplay.reviews.mockResolvedValue({ data: mockReviews });
+
+    const report = await analyzeGooglePlay('com.test.app');
+
+    // histogram 100/50/100/250/1000 -> total 1500, 1★=6.7%, 1-2★=10.0%
+    expect(report.app.ratings).toMatchObject({
+      total: 1500,
+      oneStarShare: '6.7',
+      negativeShare: '10.0',
+    });
+  });
+
+  test('fetches the App Store histogram via store.ratings (best-effort)', async () => {
+    store.app.mockResolvedValue(mockAppStoreDetail);
+    store.reviews.mockResolvedValueOnce(mockReviews.slice(0, 5)).mockResolvedValueOnce([]);
+    store.ratings.mockResolvedValue({ histogram: { 1: 10, 2: 10, 3: 0, 4: 30, 5: 50 } });
+
+    const report = await analyzeAppStore('123456');
+
+    expect(report.app.ratings.total).toBe(100);
+    expect(report.app.ratings.negativeShare).toBe('20.0');
+  });
+
+  test('survives a failing ratings request without aborting analysis', async () => {
+    store.app.mockResolvedValue(mockAppStoreDetail);
+    store.reviews.mockResolvedValueOnce(mockReviews.slice(0, 5)).mockResolvedValueOnce([]);
+    store.ratings.mockRejectedValue(new Error('ratings page 503'));
+
+    const report = await analyzeAppStore('123456');
+
+    expect(report.app.ratings).toBeNull();
     expect(report.analysis.totalReviewsFetched).toBe(5);
   });
 });

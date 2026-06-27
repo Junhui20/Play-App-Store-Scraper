@@ -3,6 +3,8 @@ const { discover } = require('./discover');
 const { analyze } = require('./analyze');
 const { compareMarkets } = require('./compare');
 const { list, printOptions } = require('./listing');
+const { similar } = require('./similar');
+const { suggest } = require('./suggest');
 const { FOREIGN_MARKETS, LOCAL_MARKET } = require('./config');
 
 const HELP = `
@@ -17,6 +19,8 @@ Commands:
   discover <keywords>           Find niche apps (low installs, high rating) across foreign markets
   analyze <appId>               Analyze reviews of an app to find pain points & feature requests
   compare <keywords>            Find apps popular abroad but missing in your local market
+  similar <appId>               Find apps similar to a seed app (build a competitor set)
+  suggest <keywords>            Expand a keyword into store autocomplete suggestions
   options                       Show all available collections & categories
 
 Options:
@@ -58,6 +62,8 @@ Examples:
   node src/index.js discover "habit tracker"
   node src/index.js analyze com.todoist --store=gplay
   node src/index.js compare "meal prep" --market=us --local=my
+  node src/index.js similar com.todoist --store=gplay
+  node src/index.js suggest "habit tracker"
 `;
 
 function parseArgs(argv) {
@@ -174,6 +180,21 @@ const COMMANDS = {
       num: toInt(flags.num),
       format: parseFormat(flags),
     }
+  ),
+
+  similar: (positional, flags) => similar(
+    requireArg(positional.join(' '), 'Error: appId required. Example: node src/index.js similar com.todoist'),
+    {
+      store: flags.store || 'gplay',
+      market: findMarket(flags.market || 'us'),
+      num: toInt(flags.num),
+      format: parseFormat(flags),
+    }
+  ),
+
+  suggest: (positional, flags) => suggest(
+    requireArg(positional.join(' '), 'Error: keywords required. Example: node src/index.js suggest "habit tracker"'),
+    { store: flags.store || 'both' }
   ),
 };
 

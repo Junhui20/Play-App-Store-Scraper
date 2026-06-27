@@ -62,6 +62,23 @@ function percentage(part, total) {
   return ((part / total) * 100).toFixed(1);
 }
 
+// Summarize a 1-5 star ratings histogram ({ '1': n, ... '5': n }) into totals
+// and low-star shares — a stronger dissatisfaction signal than the star mix of
+// the *fetched* reviews. Returns null when no histogram is available.
+function ratingsSummary(histogram) {
+  if (!histogram) return null;
+  const counts = [1, 2, 3, 4, 5].map((star) => histogram[star] || 0);
+  const total = counts.reduce((sum, n) => sum + n, 0);
+  const oneStar = counts[0];
+  const negative = counts[0] + counts[1]; // 1-2 star
+  return {
+    histogram,
+    total,
+    oneStarShare: percentage(oneStar, total),
+    negativeShare: percentage(negative, total),
+  };
+}
+
 function timestamp() {
   return new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
 }
@@ -133,6 +150,7 @@ module.exports = {
   delay,
   formatNumber,
   percentage,
+  ratingsSummary,
   timestamp,
   extractKeywords,
   extractThemes,
