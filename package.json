@@ -1,0 +1,58 @@
+{
+  "name": "play_app_store_scraper",
+  "version": "1.0.0",
+  "description": "App market research CLI — discover niche apps on Google Play & the App Store and mine their reviews for product opportunities",
+  "main": "src/index.js",
+  "bin": {
+    "app-scout": "src/index.js"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "discover": "node src/index.js discover",
+    "analyze": "node src/index.js analyze",
+    "compare": "node src/index.js compare",
+    "list": "node src/index.js list",
+    "options": "node src/index.js options",
+    "test": "NODE_OPTIONS=\"--localstorage-file=''\" jest --coverage",
+    "test:watch": "NODE_OPTIONS=\"--localstorage-file=''\" jest --watch"
+  },
+  "keywords": [
+    "app-store",
+    "google-play",
+    "market-research",
+    "app-ideas",
+    "review-mining",
+    "aso",
+    "indie-hackers",
+    "scraper",
+    "cli",
+    "product-research",
+    "competitor-analysis",
+    "niche-apps"
+  ],
+  "author": "Bryan <bryan@instamedia.my>",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Junhui20/Play-App-Store-Scraper.git"
+  },
+  "homepage": "https://github.com/Junhui20/Play-App-Store-Scraper#readme",
+  "bugs": {
+    "url": "https://github.com/Junhui20/Play-App-Store-Scraper/issues"
+  },
+  "dependencies": {
+    "app-store-scraper": "^0.18.0",
+    "google-play-scraper": "^10.1.2"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0"
+  }
+}

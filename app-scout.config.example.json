@@ -1,0 +1,19 @@
+{
+  "_comment": "Copy this to app-scout.config.json (or point $APP_SCOUT_CONFIG at it) to override defaults without editing src/config.js. Every key is optional; omit anything you don't want to change.",
+  "localMarket": { "code": "sg", "name": "Singapore", "lang": "en" },
+  "foreignMarkets": [
+    { "code": "us", "name": "United States", "lang": "en" },
+    { "code": "jp", "name": "Japan", "lang": "ja" },
+    { "code": "kr", "name": "South Korea", "lang": "ko" }
+  ],
+  "discoverFilters": {
+    "maxInstalls": 50000,
+    "minScore": 4.2,
+    "minReviews": 10,
+    "maxReviews": 3000
+  },
+  "reviewSettings": { "numReviews": 300 },
+  "fetchDefaults": { "discover": 40 },
+  "throttle": 5,
+  "rateLimitMs": 1500
+}

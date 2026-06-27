@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "project": "Play_App_Store_Scraper",
+  "detected-stack": "Node.js",
+  "skills": {
+    "tdd-workflow": {
+      "type": "domain",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["test", "tdd", "coverage"]
+      }
+    },
+    "security-review": {
+      "type": "guardrail",
+      "priority": "critical",
+      "promptTriggers": {
+        "keywords": ["security", "auth", "token", "password", "encrypt"]
+      }
+    },
+    "api-design": {
+      "type": "domain",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["api", "endpoint", "route", "express", "next"]
+      }
+    }
+  }
+}
