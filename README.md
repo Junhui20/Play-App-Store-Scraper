@@ -13,8 +13,10 @@ popular abroad but missing in your local market.
 | Command | What it gives you |
 |---------|-------------------|
 | `discover <keywords>` | Niche gems across 8 markets — low installs **and** a high rating |
-| `analyze <appId>` | Up to 500 reviews mined into ranked pain points + feature requests |
+| `analyze <appId>` | Up to 500 reviews mined into pain points + feature requests, plus the true 1–5★ ratings split |
 | `compare <keywords>` | Apps big in a foreign market but absent/under-served locally |
+| `similar <appId>` | Apps similar to a seed app — build a competitor set without hunting for IDs |
+| `suggest <keywords>` | Expand a seed keyword into store autocomplete suggestions |
 | `list [collection] [category]` | Browse top charts, optionally filtered to niche apps |
 | `options` | List every available collection & category |
 
@@ -33,6 +35,10 @@ node src/index.js analyze com.todoist --store=gplay
 
 # Find sleep-app opportunities present in the US but not in Malaysia
 node src/index.js compare "sleep tracker" --market=us --local=my
+
+# Build a competitor set from one seed app, and expand your keyword list
+node src/index.js similar com.todoist --store=gplay
+node src/index.js suggest "habit tracker"
 ```
 
 Every run prints a summary and saves a full JSON report to `output/`.

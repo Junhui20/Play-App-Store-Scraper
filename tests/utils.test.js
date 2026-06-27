@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { saveJson, safeSegment, delay, formatNumber, percentage, timestamp, extractKeywords, extractThemes } = require('../src/utils');
+const { saveJson, safeSegment, delay, formatNumber, percentage, ratingsSummary, timestamp, extractKeywords, extractThemes } = require('../src/utils');
 
 // Mock fs to avoid writing real files during tests
 jest.mock('fs');
@@ -114,6 +114,26 @@ describe('percentage', () => {
   test('returns "0.0" instead of NaN when total is zero', () => {
     expect(percentage(0, 0)).toBe('0.0');
     expect(percentage(5, 0)).toBe('0.0');
+  });
+});
+
+describe('ratingsSummary', () => {
+  test('summarizes a histogram into totals and low-star shares', () => {
+    const s = ratingsSummary({ 1: 10, 2: 10, 3: 0, 4: 30, 5: 50 });
+    expect(s.total).toBe(100);
+    expect(s.oneStarShare).toBe('10.0');
+    expect(s.negativeShare).toBe('20.0');
+  });
+
+  test('returns null when no histogram is provided', () => {
+    expect(ratingsSummary(undefined)).toBeNull();
+    expect(ratingsSummary(null)).toBeNull();
+  });
+
+  test('treats missing star buckets as zero', () => {
+    const s = ratingsSummary({ 5: 10 });
+    expect(s.total).toBe(10);
+    expect(s.negativeShare).toBe('0.0');
   });
 });
 

@@ -101,6 +101,7 @@ const mockGplayAppDetail = {
   minInstalls: 50000,
   genre: 'Productivity',
   url: 'https://play.google.com/store/apps/details?id=com.test.app',
+  histogram: { 1: 100, 2: 50, 3: 100, 4: 250, 5: 1000 },
 };
 
 const mockAppStoreDetail = {

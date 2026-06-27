@@ -1,7 +1,7 @@
 const gplay = require('google-play-scraper').default || require('google-play-scraper');
 const store = require('app-store-scraper').default || require('app-store-scraper');
 const { REVIEW_SETTINGS, RATE_LIMIT_MS, SEVERITY } = require('./config');
-const { saveJson, safeSegment, delay, percentage, timestamp, extractKeywords, extractThemes } = require('./utils');
+const { saveJson, safeSegment, delay, percentage, ratingsSummary, timestamp, extractKeywords, extractThemes } = require('./utils');
 const { PAIN_POINT_PATTERNS, FEATURE_REQUEST_PATTERNS } = require('./taxonomy');
 const { writeAnalysisExports } = require('./export');
 
@@ -69,10 +69,21 @@ async function analyzeAppStore(appId, options = {}) {
   }
 
   console.log(`  Got ${allReviews.length} reviews`);
-  return buildReport(appDetail, allReviews, 'app-store');
+
+  // Best-effort ratings histogram via a separate request — the ratings page is
+  // flaky, so a failure here must not abort the analysis.
+  let histogram;
+  try {
+    const r = await store.ratings({ id: appDetail.id, country: options.country || 'us' });
+    histogram = r.histogram;
+  } catch {
+    // no histogram available
+  }
+
+  return buildReport(appDetail, allReviews, 'app-store', histogram);
 }
 
-function buildReport(appDetail, reviews, storeName) {
+function buildReport(appDetail, reviews, storeName, histogram = appDetail.histogram) {
   const negativeReviews = reviews.filter(
     (r) => r.score <= REVIEW_SETTINGS.lowRatingMax
   );
@@ -91,6 +102,7 @@ function buildReport(appDetail, reviews, storeName) {
       installs: appDetail.minInstalls,
       category: appDetail.genre || appDetail.primaryGenre,
       url: appDetail.url,
+      ratings: ratingsSummary(histogram),
     },
     analysis: {
       totalReviewsFetched: reviews.length,
@@ -179,6 +191,10 @@ function printAnalysisSummary(report) {
   console.log(`Reviews analyzed: ${report.analysis.totalReviewsFetched}`);
   console.log(`Negative: ${report.analysis.negative.count} (${report.analysis.negative.percentage}%)`);
   console.log(`Positive: ${report.analysis.positive.count} (${report.analysis.positive.percentage}%)`);
+
+  if (report.app.ratings) {
+    console.log(`Rating mix: ${report.app.ratings.negativeShare}% low (1-2★), ${report.app.ratings.oneStarShare}% are 1★ (of ${report.app.ratings.total} all-time ratings)`);
+  }
 
   if (report.painPoints.length > 0) {
     console.log(`\nTop Pain Points:`);
