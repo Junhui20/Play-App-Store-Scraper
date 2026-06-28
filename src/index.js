@@ -6,6 +6,7 @@ const { list, printOptions } = require('./listing');
 const { similar } = require('./similar');
 const { suggest } = require('./suggest');
 const { track } = require('./track');
+const { score } = require('./score');
 const { FOREIGN_MARKETS, LOCAL_MARKET } = require('./config');
 
 const HELP = `
@@ -23,6 +24,7 @@ Commands:
   similar <appId>               Find apps similar to a seed app (build a competitor set)
   suggest <keywords>            Expand a keyword into store autocomplete suggestions
   track <appId>                 Record a snapshot & show review/rating changes since last check
+  score <keyword>               Estimate a keyword's difficulty, traffic & opportunity score
   options                       Show all available collections & categories
 
 Options:
@@ -67,6 +69,7 @@ Examples:
   node src/index.js similar com.todoist --store=gplay
   node src/index.js suggest "habit tracker"
   node src/index.js track com.todoist --store=gplay
+  node src/index.js score "sleep tracker" --store=appstore
 `;
 
 function parseArgs(argv) {
@@ -205,6 +208,15 @@ const COMMANDS = {
     {
       store: flags.store || 'gplay',
       market: findMarket(flags.market || 'us'),
+    }
+  ),
+
+  score: (positional, flags) => score(
+    requireArg(positional.join(' '), 'Error: keywords required. Example: node src/index.js score "sleep tracker"'),
+    {
+      store: flags.store || 'gplay',
+      market: findMarket(flags.market || 'us'),
+      num: toInt(flags.num),
     }
   ),
 };

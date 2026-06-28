@@ -18,10 +18,11 @@ Node.js (CommonJS); `google-play-scraper` + `app-store-scraper`; Jest for tests.
 
 ## Architecture
 - `src/index.js` — CLI arg parsing + a command-dispatch table.
-- `src/discover.js` / `analyze.js` / `compare.js` / `listing.js` / `similar.js` / `suggest.js` / `track.js` — the commands.
+- `src/discover.js` / `analyze.js` / `compare.js` / `listing.js` / `similar.js` / `suggest.js` / `track.js` / `score.js` — the commands.
 - `src/normalize.js` — single source of truth for the saved app shape + niche filter.
 - `src/export.js` — dependency-free CSV / Markdown renderers for `--format`.
 - `src/history.js` — cross-run metric history + pure delta helpers for `track`.
+- `src/score.js` — in-house keyword difficulty/traffic/opportunity heuristics (pure `computeScores`).
 - `src/taxonomy.js` — review-mining regex categories (themes / pain points / feature requests).
 - `src/config.js` — all tunable thresholds, markets, defaults, rate limits.
 - `src/utils.js` — file I/O (`saveJson`, `safeSegment`) and text helpers (`extractKeywords`, `extractThemes`, `percentage`).
