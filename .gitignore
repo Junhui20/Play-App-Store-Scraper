@@ -9,6 +9,9 @@ output/
 # Test coverage reports
 coverage/
 
+# Local cross-run metric history (track command)
+.app-scout-history.json
+
 # Local Claude Code / editor settings
 .claude/settings.local.json
 
