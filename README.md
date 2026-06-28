@@ -91,6 +91,13 @@ from public search results + autocomplete (no paid ASO data, no extra dependenci
 - **Traffic** (0–10) — a demand proxy from autocomplete breadth + top-app popularity. Higher = more searches.
 - **Opportunity** (0–10) — `traffic × (10 − difficulty) / 10`: high demand with low competition.
 
+Add `--expand` to expand the seed into its autocomplete variants, score each, and
+rank them by opportunity — and `--format=csv|md` to export the ranked table:
+
+```bash
+node src/index.js score "sleep tracker" --store=appstore --expand --format=md
+```
+
 These are transparent heuristics, not ground-truth ASO metrics — use them to **rank and compare** terms, not as absolute values.
 
 ## Configuration

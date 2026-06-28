@@ -24,7 +24,7 @@ Commands:
   similar <appId>               Find apps similar to a seed app (build a competitor set)
   suggest <keywords>            Expand a keyword into store autocomplete suggestions
   track <appId>                 Record a snapshot & show review/rating changes since last check
-  score <keyword>               Estimate a keyword's difficulty, traffic & opportunity score
+  score <keyword>               Score a keyword's difficulty/traffic/opportunity (--expand ranks autocomplete)
   options                       Show all available collections & categories
 
 Options:
@@ -69,7 +69,7 @@ Examples:
   node src/index.js similar com.todoist --store=gplay
   node src/index.js suggest "habit tracker"
   node src/index.js track com.todoist --store=gplay
-  node src/index.js score "sleep tracker" --store=appstore
+  node src/index.js score "sleep tracker" --store=appstore --expand --format=md
 `;
 
 function parseArgs(argv) {
@@ -217,6 +217,8 @@ const COMMANDS = {
       store: flags.store || 'gplay',
       market: findMarket(flags.market || 'us'),
       num: toInt(flags.num),
+      expand: flags.expand === true,
+      format: parseFormat(flags),
     }
   ),
 };

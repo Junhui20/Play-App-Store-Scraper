@@ -3,6 +3,7 @@ const store = require('app-store-scraper').default || require('app-store-scraper
 const { FOREIGN_MARKETS, FETCH_DEFAULTS, THROTTLE } = require('./config');
 const { saveJson, safeSegment, timestamp } = require('./utils');
 const { normalizeGplayApp, normalizeAppStoreApp } = require('./normalize');
+const { writeScoreExports } = require('./export');
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const round1 = (n) => Number(n.toFixed(1));
@@ -65,50 +66,87 @@ function computeScores({ keyword, apps, suggestions }) {
   };
 }
 
+async function fetchSuggestions(keyword, storeName) {
+  if (storeName === 'appstore') {
+    return (await store.suggest({ term: keyword })).map((s) => s.term);
+  }
+  return gplay.suggest({ term: keyword, throttle: THROTTLE });
+}
+
 async function fetchKeywordData(keyword, storeName, market, num) {
+  let apps;
   if (storeName === 'appstore') {
     const raw = await store.search({ term: keyword, num, country: market.code, throttle: THROTTLE });
-    const apps = raw.map((a) => normalizeAppStoreApp(a, market));
-    const suggestions = (await store.suggest({ term: keyword })).map((s) => s.term);
-    return { apps, suggestions };
+    apps = raw.map((a) => normalizeAppStoreApp(a, market));
+  } else {
+    const raw = await gplay.search({
+      term: keyword, num, country: market.code, lang: market.lang, fullDetail: true, throttle: THROTTLE,
+    });
+    apps = raw.map((a) => normalizeGplayApp(a, market));
   }
-  const raw = await gplay.search({
-    term: keyword, num, country: market.code, lang: market.lang, fullDetail: true, throttle: THROTTLE,
-  });
-  const apps = raw.map((a) => normalizeGplayApp(a, market));
-  const suggestions = await gplay.suggest({ term: keyword, throttle: THROTTLE });
+  const suggestions = await fetchSuggestions(keyword, storeName);
   return { apps, suggestions };
+}
+
+// Score a single keyword, tolerating a blocked/failed fetch (returns zeros).
+async function scoreOne(keyword, storeName, market, num) {
+  let apps = [];
+  let suggestions = [];
+  try {
+    ({ apps, suggestions } = await fetchKeywordData(keyword, storeName, market, num));
+  } catch (err) {
+    console.error(`  Error scoring "${keyword}": ${err.message}`);
+  }
+  return { keyword, ...computeScores({ keyword, apps, suggestions }) };
 }
 
 async function score(keyword, options = {}) {
   const storeName = options.store || 'gplay';
   const market = options.market || FOREIGN_MARKETS[0];
   const num = options.num || FETCH_DEFAULTS.compare;
+  const expand = options.expand || false;
+  const maxKeywords = options.maxKeywords || 8;
+  const base = `score-${safeSegment(keyword)}-${safeSegment(market.code)}-${timestamp()}`;
 
-  console.log(`\n=== Keyword opportunity: "${keyword}" (${storeName}, ${market.name}) ===`);
+  console.log(`\n=== Keyword opportunity: "${keyword}" (${storeName}, ${market.name})${expand ? ' [expanded]' : ''} ===`);
 
-  let apps = [];
-  let suggestions = [];
-  try {
-    ({ apps, suggestions } = await fetchKeywordData(keyword, storeName, market, num));
-  } catch (err) {
-    console.error(`  Error: ${err.message}`);
+  if (!expand) {
+    const { keyword: kw, ...scores } = await scoreOne(keyword, storeName, market, num);
+    const report = { keyword: kw, store: storeName, market: market.name, timestamp: new Date().toISOString(), ...scores };
+    saveJson(`${base}.json`, report);
+    if (options.format) writeScoreExports(base, [report], options.format);
+    printScore(report);
+    return report;
   }
 
-  const scores = computeScores({ keyword, apps, suggestions });
+  // Expand the seed into a keyword set via autocomplete, score each, rank.
+  let keywords = [keyword];
+  try {
+    const seedSuggestions = await fetchSuggestions(keyword, storeName);
+    keywords = [...new Set([keyword, ...seedSuggestions])].slice(0, maxKeywords);
+  } catch (err) {
+    console.error(`  Could not expand keyword: ${err.message}`);
+  }
+  console.log(`  Scoring ${keywords.length} keyword(s)...`);
+
+  const results = [];
+  for (const kw of keywords) {
+    results.push(await scoreOne(kw, storeName, market, num));
+  }
+  results.sort((a, b) => b.opportunity - a.opportunity);
 
   const report = {
-    keyword,
+    seed: keyword,
     store: storeName,
     market: market.name,
+    expanded: true,
     timestamp: new Date().toISOString(),
-    ...scores,
+    totalKeywords: results.length,
+    keywords: results,
   };
-
-  const base = `score-${safeSegment(keyword)}-${safeSegment(market.code)}-${timestamp()}`;
   saveJson(`${base}.json`, report);
-
-  printScore(report);
+  if (options.format) writeScoreExports(base, results, options.format);
+  printScores(report);
   return report;
 }
 
@@ -119,6 +157,13 @@ function printScore(r) {
   console.log(`  Opportunity: ${r.opportunity}/10  (higher = better gap to target)`);
   console.log(`  Signals: ${b.competitors} top apps, ${b.titleBroad} with "${r.keyword}" in title, ` +
     `${b.avgReviews} avg reviews, ${b.suggestions} autocomplete suggestions`);
+}
+
+function printScores(report) {
+  console.log(`\nRanked by opportunity (${report.totalKeywords} keywords):`);
+  for (const r of report.keywords) {
+    console.log(`  ${r.opportunity}/10  "${r.keyword}"  (difficulty ${r.difficulty}, traffic ${r.traffic})`);
+  }
 }
 
 module.exports = { score, computeScores };
