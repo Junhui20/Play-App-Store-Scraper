@@ -10,6 +10,7 @@ jest.mock('app-store-scraper', () => ({
 
 jest.mock('../src/utils', () => ({
   saveJson: jest.fn().mockReturnValue('/mock/path.json'),
+  saveText: jest.fn(),
   safeSegment: jest.requireActual('../src/utils').safeSegment,
   formatNumber: jest.requireActual('../src/utils').formatNumber,
   timestamp: jest.fn().mockReturnValue('2026-03-15-00-00-00'),
@@ -17,6 +18,7 @@ jest.mock('../src/utils', () => ({
 
 const gplay = require('google-play-scraper').default;
 const store = require('app-store-scraper');
+const utils = require('../src/utils');
 const { score, computeScores } = require('../src/score');
 const { saveJson } = require('../src/utils');
 
@@ -92,5 +94,33 @@ describe('score (main)', () => {
 
     expect(report.difficulty).toBe(0);
     expect(saveJson).toHaveBeenCalledTimes(1);
+  });
+
+  test('--expand scores the seed + autocomplete, ranked by opportunity', async () => {
+    store.suggest.mockResolvedValue([{ term: 'sleep' }, { term: 'sleep timer' }, { term: 'sleep music' }]);
+    store.search.mockResolvedValue([
+      { id: 1, appId: 'com.a', title: 'App', score: 4.5, reviews: 3000, primaryGenre: 'Health' },
+    ]);
+
+    const report = await score('sleep', { store: 'appstore', market: US_MARKET, expand: true });
+
+    expect(report.expanded).toBe(true);
+    expect(report.seed).toBe('sleep');
+    // seed is deduped against its own 'sleep' suggestion
+    expect(report.keywords.map((k) => k.keyword)).toEqual(['sleep', 'sleep timer', 'sleep music']);
+    for (let i = 1; i < report.keywords.length; i++) {
+      expect(report.keywords[i - 1].opportunity).toBeGreaterThanOrEqual(report.keywords[i].opportunity);
+    }
+  });
+
+  test('--format=md writes a score-table export', async () => {
+    store.search.mockResolvedValue([]);
+    store.suggest.mockResolvedValue([{ term: 'sleep' }]);
+
+    await score('sleep', { store: 'appstore', market: US_MARKET, format: 'md' });
+
+    expect(utils.saveText).toHaveBeenCalledTimes(1);
+    expect(utils.saveText.mock.calls[0][0]).toContain('score-sleep-us-');
+    expect(utils.saveText.mock.calls[0][0].endsWith('.md')).toBe(true);
   });
 });

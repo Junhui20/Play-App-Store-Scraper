@@ -25,6 +25,14 @@ const PAIN_COLUMNS = [
   { key: 'severity', header: 'Severity' },
 ];
 
+// Columns for the score command's keyword table.
+const SCORE_COLUMNS = [
+  { key: 'keyword', header: 'Keyword' },
+  { key: 'opportunity', header: 'Opportunity' },
+  { key: 'difficulty', header: 'Difficulty' },
+  { key: 'traffic', header: 'Traffic' },
+];
+
 function cell(value) {
   return value === undefined || value === null ? '' : String(value);
 }
@@ -101,12 +109,24 @@ function writeAnalysisExports(base, report, format) {
   }
 }
 
+// Write CSV/MD exports for a keyword-score table (score command).
+function writeScoreExports(base, rows, format) {
+  if (format === 'csv' || format === 'all') {
+    saveText(`${base}.csv`, toCsv(rows, SCORE_COLUMNS));
+  }
+  if (format === 'md' || format === 'all') {
+    saveText(`${base}.md`, toMarkdownTable(rows, SCORE_COLUMNS));
+  }
+}
+
 module.exports = {
   APP_COLUMNS,
   PAIN_COLUMNS,
+  SCORE_COLUMNS,
   toCsv,
   toMarkdownTable,
   analysisToMarkdown,
   writeAppExports,
   writeAnalysisExports,
+  writeScoreExports,
 };
