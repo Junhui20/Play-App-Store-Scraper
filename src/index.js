@@ -5,6 +5,7 @@ const { compareMarkets } = require('./compare');
 const { list, printOptions } = require('./listing');
 const { similar } = require('./similar');
 const { suggest } = require('./suggest');
+const { track } = require('./track');
 const { FOREIGN_MARKETS, LOCAL_MARKET } = require('./config');
 
 const HELP = `
@@ -21,6 +22,7 @@ Commands:
   compare <keywords>            Find apps popular abroad but missing in your local market
   similar <appId>               Find apps similar to a seed app (build a competitor set)
   suggest <keywords>            Expand a keyword into store autocomplete suggestions
+  track <appId>                 Record a snapshot & show review/rating changes since last check
   options                       Show all available collections & categories
 
 Options:
@@ -64,6 +66,7 @@ Examples:
   node src/index.js compare "meal prep" --market=us --local=my
   node src/index.js similar com.todoist --store=gplay
   node src/index.js suggest "habit tracker"
+  node src/index.js track com.todoist --store=gplay
 `;
 
 function parseArgs(argv) {
@@ -195,6 +198,14 @@ const COMMANDS = {
   suggest: (positional, flags) => suggest(
     requireArg(positional.join(' '), 'Error: keywords required. Example: node src/index.js suggest "habit tracker"'),
     { store: flags.store || 'both' }
+  ),
+
+  track: (positional, flags) => track(
+    requireArg(positional.join(' '), 'Error: appId required. Example: node src/index.js track com.todoist'),
+    {
+      store: flags.store || 'gplay',
+      market: findMarket(flags.market || 'us'),
+    }
   ),
 };
 

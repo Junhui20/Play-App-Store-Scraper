@@ -17,6 +17,7 @@ popular abroad but missing in your local market.
 | `compare <keywords>` | Apps big in a foreign market but absent/under-served locally |
 | `similar <appId>` | Apps similar to a seed app — build a competitor set without hunting for IDs |
 | `suggest <keywords>` | Expand a seed keyword into store autocomplete suggestions |
+| `track <appId>` | Snapshot an app's rating/reviews and report what changed since your last check |
 | `list [collection] [category]` | Browse top charts, optionally filtered to niche apps |
 | `options` | List every available collection & category |
 
@@ -39,6 +40,9 @@ node src/index.js compare "sleep tracker" --market=us --local=my
 # Build a competitor set from one seed app, and expand your keyword list
 node src/index.js similar com.todoist --store=gplay
 node src/index.js suggest "habit tracker"
+
+# Track an app over time — run periodically to see review velocity & rating drift
+node src/index.js track com.todoist --store=gplay
 ```
 
 Every run prints a summary and saves a full JSON report to `output/`.
