@@ -18,6 +18,7 @@ popular abroad but missing in your local market.
 | `similar <appId>` | Apps similar to a seed app — build a competitor set without hunting for IDs |
 | `suggest <keywords>` | Expand a seed keyword into store autocomplete suggestions |
 | `track <appId>` | Snapshot an app's rating/reviews and report what changed since your last check |
+| `score <keyword>` | Estimate a keyword's difficulty, traffic & an opportunity score from public data |
 | `list [collection] [category]` | Browse top charts, optionally filtered to niche apps |
 | `options` | List every available collection & category |
 
@@ -43,6 +44,9 @@ node src/index.js suggest "habit tracker"
 
 # Track an app over time — run periodically to see review velocity & rating drift
 node src/index.js track com.todoist --store=gplay
+
+# Estimate how worth-targeting a keyword is (difficulty / traffic / opportunity)
+node src/index.js score "sleep tracker" --store=appstore
 ```
 
 Every run prints a summary and saves a full JSON report to `output/`.
@@ -77,6 +81,17 @@ Tune the thresholds in `src/config.js`:
 - installs ≤ 100,000   — small enough to compete with
 - rating ≥ 4.0         — people like the concept
 - 10 ≤ reviews ≤ 5,000 — validated demand, but not saturated
+
+## Keyword scoring
+
+`score <keyword>` estimates how worth-targeting a search term is, computed in-house
+from public search results + autocomplete (no paid ASO data, no extra dependencies):
+
+- **Difficulty** (0–10) — how entrenched the top results are (keyword-in-title matches + avg reviews). Lower = easier to rank.
+- **Traffic** (0–10) — a demand proxy from autocomplete breadth + top-app popularity. Higher = more searches.
+- **Opportunity** (0–10) — `traffic × (10 − difficulty) / 10`: high demand with low competition.
+
+These are transparent heuristics, not ground-truth ASO metrics — use them to **rank and compare** terms, not as absolute values.
 
 ## Configuration
 
