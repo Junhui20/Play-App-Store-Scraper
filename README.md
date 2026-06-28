@@ -3,6 +3,10 @@
 > Find niche app ideas with little competition by mining **Google Play** and the
 > **Apple App Store** — then read the reviews to see exactly what users are begging for.
 
+[![CI](https://github.com/Junhui20/Play-App-Store-Scraper/actions/workflows/ci.yml/badge.svg)](https://github.com/Junhui20/Play-App-Store-Scraper/actions/workflows/ci.yml)
+![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![License](https://img.shields.io/badge/license-ISC-blue)
+
 A small, dependency-light Node.js CLI for solo developers and indie hackers doing
 app market research. It discovers under-served "niche gems", mines competitor
 reviews into ranked pain points and feature requests, and finds apps that are
