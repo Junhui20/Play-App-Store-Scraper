@@ -17,8 +17,8 @@
     "compare": "node src/index.js compare",
     "list": "node src/index.js list",
     "options": "node src/index.js options",
-    "test": "NODE_OPTIONS=\"--localstorage-file=''\" jest --coverage",
-    "test:watch": "NODE_OPTIONS=\"--localstorage-file=''\" jest --watch"
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
   },
   "keywords": [
     "app-store",
