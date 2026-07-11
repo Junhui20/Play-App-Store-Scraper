@@ -7,6 +7,7 @@ const { similar } = require('./similar');
 const { suggest } = require('./suggest');
 const { track } = require('./track');
 const { score } = require('./score');
+const { report } = require('./report');
 const { FOREIGN_MARKETS, LOCAL_MARKET } = require('./config');
 
 const HELP = `
@@ -25,6 +26,7 @@ Commands:
   suggest <keywords>            Expand a keyword into store autocomplete suggestions
   track <appId>                 Record a snapshot & show review/rating changes since last check
   score <keyword>               Score a keyword's difficulty/traffic/opportunity (--expand ranks autocomplete)
+  report <topic>                Generate a branded, client-ready market report from existing output/ data
   options                       Show all available collections & categories
 
 Options:
@@ -37,6 +39,9 @@ Options:
   --lang=en|ja|...              Review language for analyze (default: en)
   --niche                       Apply niche filter (low installs + high rating)
   --format=csv|md|all           Also write a CSV / Markdown export (JSON is always saved)
+  --category="Health & Fitness" Category label for the report header (report)
+  --discover=<file.json>        Discovery dataset for the report (report; default: auto-match in output/)
+  --analyze=f1.json,f2.json     Review-analysis datasets for the report (report)
   --max-installs=N              Override niche filter: max installs (discover/list)
   --min-score=N                 Override niche filter: min rating (discover/list)
   --min-reviews=N               Override niche filter: min reviews (discover/list)
@@ -70,6 +75,7 @@ Examples:
   node src/index.js suggest "habit tracker"
   node src/index.js track com.todoist --store=gplay
   node src/index.js score "sleep tracker" --store=appstore --expand --format=md
+  node src/index.js report "sleep tracker" --category="Health & Fitness"
 `;
 
 function parseArgs(argv) {
@@ -208,6 +214,16 @@ const COMMANDS = {
     {
       store: flags.store || 'gplay',
       market: findMarket(flags.market || 'us'),
+    }
+  ),
+
+  report: (positional, flags) => report(
+    positional.join(' ') || undefined,
+    {
+      category: flags.category,
+      discover: typeof flags.discover === 'string' ? flags.discover : undefined,
+      analyze: flags.analyze ? String(flags.analyze).split(',').map((s) => s.trim()) : undefined,
+      date: typeof flags.date === 'string' ? flags.date : undefined,
     }
   ),
 

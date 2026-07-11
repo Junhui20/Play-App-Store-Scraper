@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy this to report.config.json (or point $APP_SCOUT_REPORT_CONFIG at it) to drive a polished, client-deliverable market report. Then run: node src/index.js report. CLI flags (topic positional, --category, --discover, --analyze) override anything set here. File paths under 'discover'/'analyses' are resolved relative to output/ (absolute paths also work).",
+  "brand": {
+    "name": "CatLab Tech",
+    "tagline": "App Market Intelligence",
+    "contact": "research@catlabtech.example"
+  },
+  "topic": "Sleep Tracker & Sounds",
+  "category": "Health & Fitness",
+  "discover": "discover-sleep_tracker-2026-03-25-05-59-31.json",
+  "analyses": [
+    "analyze-com_sleepjar_android-2026-03-25-06-04-23.json",
+    "analyze-com_apirox_sleeprecorder-2026-03-25-06-03-34.json",
+    "analyze-com_aluntapps_rainsounds-2026-03-25-06-03-18.json"
+  ],
+  "disclaimer": "Figures are drawn from public Google Play and Apple App Store listings via the google-play-scraper and app-store-scraper libraries, captured at the time this report was generated. Store metrics are approximate and change over time. This is independent research, not affiliated with or endorsed by Google or Apple."
+}

@@ -21,8 +21,9 @@ popular abroad but missing in your local market.
 | `compare <keywords>` | Apps big in a foreign market but absent/under-served locally |
 | `similar <appId>` | Apps similar to a seed app — build a competitor set without hunting for IDs |
 | `suggest <keywords>` | Expand a seed keyword into store autocomplete suggestions |
-| `track <appId>` | Snapshot an app's rating/reviews and report what changed since your last check |
+| `track <appId>` | Snapshot an app's rating/reviews/version and report what changed since your last check |
 | `score <keyword>` | Estimate a keyword's difficulty, traffic & an opportunity score from public data |
+| `report <topic>` | Assemble discover + analyze data into a branded, client-ready Markdown market report |
 | `list [collection] [category]` | Browse top charts, optionally filtered to niche apps |
 | `options` | List every available collection & category |
 
@@ -104,6 +105,99 @@ node src/index.js score "sleep tracker" --store=appstore --expand --format=md
 
 These are transparent heuristics, not ground-truth ASO metrics — use them to **rank and compare** terms, not as absolute values.
 
+## Client-ready market reports
+
+`report` turns raw scrape output into a **branded, one-file deliverable** — the
+kind you can hand to a client. It reads existing JSON from `output/` (so it never
+re-scrapes) and renders a Markdown report with a consistent structure:
+
+1. **Branded header** — brand name, tagline, report date, category, and a
+   data-source disclaimer.
+2. **Market Overview** — markets scanned, niche apps found, rating/review ranges.
+3. **Competitor Landscape** — a table of the discovered apps (rating, reviews, installs).
+4. **Ratings & Review Analysis** — per competitor: rating mix, pain-point table, feature requests.
+5. **Opportunities** — pain points and feature requests aggregated across all analyzed
+   competitors (the gaps to out-build).
+6. **Branded footer** — copyright, contact, confidentiality line.
+
+### One command
+
+```bash
+# Auto-mode: finds the newest matching discover-*.json in output/ for the topic.
+node src/index.js report "sleep tracker" --category="Health & Fitness"
+
+# Pin exact source files:
+node src/index.js report "Sleep Tracker & Sounds" \
+  --category="Health & Fitness" \
+  --discover=discover-sleep_tracker-2026-03-25-05-59-31.json \
+  --analyze=analyze-com_sleepjar_android-2026-03-25-06-04-23.json,analyze-com_apirox_sleeprecorder-2026-03-25-06-03-34.json
+```
+
+The report is written to `reports/market-report-<slug>-<YYYY-MM-DD>.md`.
+
+### Driving it from a config file (recommended for repeatable deliverables)
+
+Drop a `report.config.json` in the working directory (or point
+`$APP_SCOUT_REPORT_CONFIG` at one) to pin the brand, topic, category, disclaimer,
+and exact source files — then regenerate any time with a bare `node src/index.js report`.
+CLI flags override the config. See
+[`report.config.example.json`](report.config.example.json):
+
+```json
+{
+  "brand": { "name": "CatLab Tech", "tagline": "App Market Intelligence", "contact": "research@catlabtech.example" },
+  "topic": "Sleep Tracker & Sounds",
+  "category": "Health & Fitness",
+  "discover": "discover-sleep_tracker-2026-03-25-05-59-31.json",
+  "analyses": ["analyze-com_sleepjar_android-2026-03-25-06-04-23.json"]
+}
+```
+
+```bash
+APP_SCOUT_REPORT_CONFIG=report.config.json node src/index.js report
+```
+
+Brand defaults to **CatLab Tech** if no config is present.
+
+## Continuous competitor monitoring (`track` + snapshots)
+
+Each `track` run appends a **dated snapshot** (rating, review count, install band,
+and app version) to `.app-scout-history.json` and prints a **change diff** against
+the previous snapshot — new version released, rating moved, install band changed,
+review-count jump:
+
+```bash
+node src/index.js track com.todoist --store=gplay
+# Todoist: To-Do List & Planner (v1234.5)
+#   ★4.6 | 512340 reviews | 10000000+ installs
+#   Since last check (7d ago): reviews +1240, rating +0.0
+#   Changes detected:
+#     • New version released: 1233.0 → 1234.5
+#     • Review count +1240 (511100 → 512340)
+#   History: 6 snapshot(s) recorded
+```
+
+Snapshots live in `.app-scout-history.json` at the project root (git-ignored so
+your trend data survives `output/` wipes). Override the location with
+`$APP_SCOUT_HISTORY`.
+
+### Scheduling it (cron)
+
+To sell "continuous monitoring", run `track` on a schedule. Add a cron entry with
+`crontab -e` (this repo does **not** install any cron job for you):
+
+```cron
+# Snapshot three competitors every day at 08:00, logging to a file.
+0 8 * * * cd /path/to/Play-App-Store-Scraper && \
+  /usr/bin/node src/index.js track com.todoist --store=gplay >> track.log 2>&1
+0 8 * * * cd /path/to/Play-App-Store-Scraper && \
+  /usr/bin/node src/index.js track com.ticktick.task --store=gplay >> track.log 2>&1
+```
+
+Run from a residential/normal IP — Google Play blocks scraping from datacenter IPs
+(see the note below). Each run is idempotent per day: it just appends one more
+snapshot, so the history grows into a trend you can chart or diff.
+
 ## Configuration
 
 Everything tunable lives in `src/config.js`:
@@ -155,6 +249,9 @@ src/
   compare.js    cross-market gap analysis
   listing.js    top-chart listing
   normalize.js  single source of truth for the saved app shape + niche filter
+  track.js      dated snapshots + change detection for continuous monitoring
+  history.js    snapshot storage + pure delta/change-detection helpers
+  report.js     branded client-ready market-report generator
   taxonomy.js   review-mining category patterns
   config.js     all tunable thresholds, markets, defaults
   utils.js      file I/O + text helpers

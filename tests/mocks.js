@@ -99,6 +99,7 @@ const mockGplayAppDetail = {
   score: 4.2,
   reviews: 1500,
   minInstalls: 50000,
+  version: '1.0.0',
   genre: 'Productivity',
   url: 'https://play.google.com/store/apps/details?id=com.test.app',
   histogram: { 1: 100, 2: 50, 3: 100, 4: 250, 5: 1000 },

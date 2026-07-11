@@ -52,4 +52,39 @@ describe('track', () => {
     expect(result.delta.installsDelta).toBe(10000);
     expect(result.snapshots).toBe(2);
   });
+
+  test('captures the app version in each snapshot', async () => {
+    gplay.app.mockResolvedValue({ ...mockGplayAppDetail, version: '2.3.1' });
+    history.loadHistory.mockReturnValue({});
+
+    const result = await track('com.test.app', { market: US_MARKET });
+
+    expect(result.snapshot.version).toBe('2.3.1');
+    const saved = history.saveHistory.mock.calls[0][0];
+    expect(saved['gplay:com.test.app:us'][0].version).toBe('2.3.1');
+  });
+
+  test('reports discrete changes (new version + rating move) vs the previous snapshot', async () => {
+    gplay.app.mockResolvedValue({ ...mockGplayAppDetail, score: 4.5, version: '1.1.0' });
+    history.loadHistory.mockReturnValue({
+      'gplay:com.test.app:us': [
+        { date: '2026-06-01T00:00:00.000Z', score: 4.2, reviews: 1500, installs: 50000, version: '1.0.0' },
+      ],
+    });
+
+    const result = await track('com.test.app', { market: US_MARKET });
+
+    const types = result.changes.map((c) => c.type);
+    expect(types).toContain('version');
+    expect(types).toContain('rating');
+  });
+
+  test('reports no changes for a first snapshot', async () => {
+    gplay.app.mockResolvedValue(mockGplayAppDetail);
+    history.loadHistory.mockReturnValue({});
+
+    const result = await track('com.test.app', { market: US_MARKET });
+
+    expect(result.changes).toEqual([]);
+  });
 });
